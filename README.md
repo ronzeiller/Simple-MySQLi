@@ -3,7 +3,7 @@
 
 Forked from WebsiteBeaver/Simple-MySQLi(https://github.com/WebsiteBeaver)
 
-A big thanks to WebsiteBeaver for their great work on this library. This project aims to continue and expand upon the original work, providing additional features and enhancements while maintaining its simplicity and efficiency.
+A big thanks to WebsiteBeaver for his great work on this library. This project aims to continue and expand upon the original work, providing additional features and enhancements while maintaining its simplicity and efficiency.
 
 Contributions and suggestions are always welcome to help improve the library and ensure its usability for a wide range of database operations in PHP applications.
 
@@ -909,10 +909,10 @@ Closes the MySQL connections
 
 - **mysqli_sql_exception** If mysqli function failed due to `mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT)`
 
-## get_empty_vars_for_table(string $tableName)
+## get_empty_vars_for_table()
 
 ```php
-function get_empty_vars_for_table(): array
+function get_empty_vars_for_table(string $tableName): array
 ```
 **Description**
 
@@ -924,10 +924,10 @@ or generating inserts without having actual data.
 
 - **mysqli_sql_exception** If empty tableName 
 
-## get_empty_vars_for_table(string $tableName)
+## get_empty_vars_for_table()
 
 ```php
-function upsert(): int
+function upsert(string $tableName, array $data): int
 ```
 **Description**
 
