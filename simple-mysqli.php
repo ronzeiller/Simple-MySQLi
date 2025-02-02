@@ -503,17 +503,17 @@ class SimpleMySQLi {
 	 *    -	Dynamically constructs an INSERT INTO ... ON DUPLICATE KEY UPDATE query.
 	 *    -	Updates the existing record if a duplicate key is detected, otherwise inserts a new one.
     * 
-    * @param string $table    The name of the table where the upsert operation should occur.
+    * @param string $tableName    The name of the table where the upsert operation should occur.
     * @param type $data       An associative array or object containing the data to be inserted or updated.
     * @return int             Returns the number of affected rows. Returns -2 on failure.
     * @throws mysqli_sql_exception on empty $tableName or $data
     */
-   public function upsert( string $table, $data) : int {
+   public function upsert( string $tableName, $data) : int {
       
-      if ( ! $data ||!$table) throw new SimpleMySQLiException("upsert() Empty tableName|data");
+      if ( ! $data ||!$tableName) throw new SimpleMySQLiException("upsert() Empty tableName|data");
       if ( is_object($data)) $data = (array)$data;
       
-      $result = $this->query("SHOW COLUMNS FROM `$table`;");
+      $result = $this->query("SHOW COLUMNS FROM `$tableName`;");
       $tableColumns = [];
       while ($row = $result->fetch('assoc')) {
           $tableColumns[] = $row['Field'];
@@ -521,8 +521,6 @@ class SimpleMySQLi {
       
       // Filter data array based on table columns
       $filteredData = array_intersect_key($data, array_flip($tableColumns));
-      
-      //error_log("filteredData: ".print_r($filteredData, true));
       
       // Build dynamic INSERT ON DUPLICATE KEY UPDATE statement
       $columns = implode(", ", array_keys($filteredData));
@@ -534,10 +532,104 @@ class SimpleMySQLi {
           return "$col = VALUES($col)";
       }, array_keys($filteredData)));
       
-      $qry = "INSERT INTO `$table` ($columns)
+      $qry = "INSERT INTO `$tableName` ($columns)
                VALUES ($placeholders) ON DUPLICATE KEY UPDATE $updatePart";
       
       $res = $this->query($qry, $values);
       return $res ? $this->mysqli->affected_rows : -2;
+   }
+   
+   
+   /**
+    * Überprüft (optional) die Daten anhand der Tabelle
+    * und führt ein INSERT-Statement aus, um Daten in eine Tabelle einzufügen.
+    * 
+    *
+    * @param string $tableName Der Name der Tabelle.
+    * @param mixed $data Assoziatives Array, das Spaltennamen und Werte enthält.
+    * @return int Gibt die ID des eingefügten Datensatzes zurück oder -2 bei Fehler oder 0 wenn keine AI ID verfügbar
+    */
+   public function insert(string $tableName, mixed $data, $check=false) : int {
+      if ( ! $data ||!$tableName)  {
+         throw new SimpleMySQLiException("upsert() Empty tableName|data");
+      }
+      
+      if ( is_object($data) ) $data = (array)$data;
+      
+      if ( $check ) $data = $this->validateData($tableName, $data);
+
+      // Spaltennamen und Werte vorbereiten
+      $columns = implode(", ", array_keys($data));
+      $placeholders = implode(", ", array_fill(0, count($data), '?'));
+      $values = array_values($data);
+
+      // SQL-Query erstellen
+      $qry = "INSERT INTO `$tableName` ($columns) VALUES ($placeholders)";
+      $res = $this->query( $qry, $values);
+
+      if ($res === false) {
+         return -2; // Fehlerwert für fehlerhaftes Query
+      }
+
+      return $this->mysqli->insert_id ?: 0; // Gibt bei Erfolg entweder Auto-Increment ID oder 0 zurück
+   }
+   
+   /**
+    * Validiert und bereinigt Daten basierend auf der Tabellenstruktur.
+    *
+    * @param string $tableName Der Name der Tabelle.
+    * @param array $inputData Die Eingabedaten als assoziatives Array.
+    * @return array Die bereinigten Daten, bereit für die Datenbankoperationen.
+    * @throws Exception Wenn param leer oder die Tabellenstruktur nicht gelesen werden kann.
+    */
+   public function validateData(string $tableName, array $inputData): array {
+      
+      if ( !$tableName ||empty($inputData) ) {
+         throw new Exception("validateData No tableName or inputData! " );
+      }
+      
+      $validatedData = [];
+      $query = "DESCRIBE `$tableName`";
+      $result = $this->query($query);
+
+      if (!$result) {
+         throw new Exception("Tabelle konnte nicht analysiert werden: " . $this->error);
+      }
+
+      while ($row = $result->fetch('assoc')) {
+         $field = $row['Field'];
+         $type = $row['Type'];
+
+         // Wenn der Wert im Input-Datenarray vorhanden ist
+         if (array_key_exists($field, $inputData)) {
+            $value = $inputData[$field];
+
+            if (preg_match('/^int|tinyint|bigint|smallint/i', $type)) {
+               // Prüfen, ob es sich tatsächlich um eine Zahl handelt
+               $validatedData[$field] = is_numeric($value) ? (int) $value : self::INT_DEFAULT;
+            } elseif (preg_match('/^float|double|decimal/i', $type)) {
+               $validatedData[$field] = is_numeric($value) ? (float) $value : self::FLOAT_DEFAULT;
+            } elseif (preg_match('/^varchar|text|char/i', $type)) {
+               // Für Textfelder immer als String behandeln
+               $validatedData[$field] = is_scalar($value) ? (string) $value : '';
+            } else {
+               $validatedData[$field] = $value ?? null;
+            }
+         } else {
+            // Standardwerte für Felder, die nicht im Input-Datenarray enthalten sind
+            if (preg_match('/^int|tinyint|bigint|smallint/i', $type)) {
+               $validatedData[$field] = self::INT_DEFAULT;
+            } elseif (preg_match('/^float|double|decimal/i', $type)) {
+               $validatedData[$field] = self::FLOAT_DEFAULT;
+            } elseif (preg_match('/^varchar|text|char/i', $type)) {
+               $validatedData[$field] = '';
+            } else {
+               $validatedData[$field] = null;
+            }
+         }
+      }
+
+      $result->freeResult();
+      return $validatedData;
    }
 }
