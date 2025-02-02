@@ -1,5 +1,11 @@
 # Changelog
 
+- [**2.0.0**](https://github.com/ronzeiller/Simple-MySQLi) - February 2, 2025
+
+  - Beginning works on v2.0.0
+  - Added get_empty_vars_for_table()
+  - Added upsert()
+
 - [**1.5.5**](https://github.com/WebsiteBeaver/Simple-MySQLi/tree/1.5.5) - September 20, 2018
 
   - Allow to use scalar for single value in `query()` and `execute()`

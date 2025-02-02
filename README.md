@@ -1,5 +1,14 @@
 # Simple MySQLi - MySQLi Wrapper
 
+
+Forked from WebsiteBeaver/Simple-MySQLi(https://github.com/WebsiteBeaver)
+
+A big thanks to WebsiteBeaver for their great work on this library. This project aims to continue and expand upon the original work, providing additional features and enhancements while maintaining its simplicity and efficiency.
+
+Contributions and suggestions are always welcome to help improve the library and ensure its usability for a wide range of database operations in PHP applications.
+
+**WebsiteBeaver:**
+
 Using MySQLi prepared statements is a great way to prevent against SQL injection, but it can start feeling tedious after a while. I thought this could be improved a little, which is why wanted to create an easy to use MySQLi database wrapper, while also ensuring that the SQL queries aren't broken up into proprietary syntactic sugar chaining. This way, so you can have extremely concise code, while still keeping your SQL syntax intact. The purpose of this class is to make using plain SQL queries as enjoyable as possible, without being an ORM. In a lot of ways, I modeled this class after what I believe the general syntax for vanilla MySQLi/PDO should be.
 
 I specifically chose MySQLi over PDO to have the versatiliy to use MySQL-specific features. Currently, the only ones I'm using are [mysqli::info](http://php.net/manual/en/mysqli.info.php) and proper closing/freeing methods. Unfortunately, asynchronous queries don't have support for prepared statements yet, so I'll wait until they do to implement them.
@@ -25,16 +34,16 @@ The purpose of this class is to keep things as simple as possible, while account
 
 # Supported Versions
 
-PHP 7.1+
+PHP 8.0+
 
 # Install
 
-[Click here](https://github.com/WebsiteBeaver/Simple-MySQLi/blob/master/CHANGELOG.md) to view changes to each version.
+[Click here](https://github.com/ronzeiller/Simple-MySQLi/blob/master/CHANGELOG.md) to view changes to each version.
 
 **Composer**
 
 ```
-composer require websitebeaver/simple-mysqli
+composer require ronzeiller/simple-mysqli
 ```
 
 Then include or require the file in your php page.
@@ -49,10 +58,10 @@ Clone either the latest version or by tag.
 
 ```
 //Get by version number
-git clone https://github.com/WebsiteBeaver/Simple-MySQLi/tree/{your version number}
+git clone https://github.com/ronzeiller/Simple-MySQLi.git/tree/{your version number}
 
 //Get the latest
-git clone https://github.com/WebsiteBeaver/Simple-MySQLi.git
+git clone https://github.com/ronzeiller/Simple-MySQLi.git
 ```
 
 Then include or require the file in your php page.
@@ -110,6 +119,8 @@ require 'simple-mysqli.php';
   - [freeResult()](#freeresult)
   - [closeStmt()](#closestmt)
   - [close()](#close)
+  - [get_empty_vars_for_table()](#get_empty_vars_for_table)
+  - [upsert()](#upsert)
 - [Changelog](#changelog)
 
 # Examples
@@ -897,6 +908,46 @@ Closes the MySQL connections
 **Throws**
 
 - **mysqli_sql_exception** If mysqli function failed due to `mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT)`
+
+## get_empty_vars_for_table(string $tableName)
+
+```php
+function get_empty_vars_for_table(): array
+```
+**Description**
+
+Generates and returns an associative array containing default empty values for each column of a specified database table. 
+It automatically assigns default placeholders based on the field types, which is useful for preparing initial data structures 
+or generating inserts without having actual data.
+
+**Throws**
+
+- **mysqli_sql_exception** If empty tableName 
+
+## get_empty_vars_for_table(string $tableName)
+
+```php
+function upsert(): int
+```
+**Description**
+
+This method performs an “upsert” (update or insert) operation on a specified table. It inserts a new record if a matching one does not exist, or updates the existing record if a duplicate key violation occurs.
+
+**Function Behavior**
+- It filters the provided data to ensure only valid columns from the target table are used.
+- Dynamically constructs an INSERT INTO ... ON DUPLICATE KEY UPDATE query.
+- Updates the existing record if a duplicate key is detected, otherwise inserts a new one.
+
+
+**Usage Example**
+
+$data = ['id' => 1, 'name' => 'John Doe', 'email' => 'johndoe@example.com'];
+
+$affectedRows = $db->upsert('users', $data);
+
+**Throws**
+
+- **mysqli_sql_exception** If empty tableName 
 
 # Changelog
 

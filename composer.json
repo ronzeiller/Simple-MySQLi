@@ -1,18 +1,22 @@
 {
-  "name": "websitebeaver/simple-mysqli",
-  "description": "Wrapper class for MySQLi prepared statements",
-	"keywords": ["MySQLi", "MySQL", "prepared", "database"],
+  "name": "ronzeiller/simple-mysqli",
+  "description": "Extended and maintained version of WebsiteBeaver's Simple-MySQLi, a lightweight wrapper for MySQLi prepared statements.",
+  "keywords": ["MySQLi", "MySQL", "prepared", "database", "wrapper"],
   "license": "MIT",
   "authors": [
+    {
+      "name": "Ron Zeiller",
+      "email": "ronzeiller@users.noreply.github.com"
+    },
     {
       "name": "Daniel Marcus",
       "email": "daniel@websitebeaver.com"
     }
   ],
   "require": {
-		"php": ">=7.1.0"
-	},
-	"autoload": {
+    "php": ">=8.0"
+  },
+  "autoload": {
     "files": ["simple-mysqli.php"]
   }
 }
